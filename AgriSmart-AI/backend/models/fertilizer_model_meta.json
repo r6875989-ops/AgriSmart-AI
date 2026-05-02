@@ -1,0 +1,52 @@
+{
+  "model_type": "RandomForest",
+  "accuracy": 1.0,
+  "cv_accuracy": 1.0,
+  "features": [
+    "Temparature",
+    "Humidity ",
+    "Moisture",
+    "Soil Type Encoded",
+    "Crop Type Encoded",
+    "Nitrogen",
+    "Potassium",
+    "Phosphorous",
+    "NPK_Total",
+    "N_Ratio",
+    "P_Ratio",
+    "K_Ratio",
+    "Temp_Humidity_Ratio",
+    "Moisture_Humidity_Ratio"
+  ],
+  "soil_types": [
+    "Black",
+    "Clayey",
+    "Loamy",
+    "Red",
+    "Sandy"
+  ],
+  "crop_types": [
+    "Barley",
+    "Cotton",
+    "Ground Nuts",
+    "Maize",
+    "Millets",
+    "Oil seeds",
+    "Paddy",
+    "Pulses",
+    "Sugarcane",
+    "Tobacco",
+    "Wheat"
+  ],
+  "fertilizer_types": [
+    "10-26-26",
+    "14-35-14",
+    "17-17-17",
+    "20-20",
+    "28-28",
+    "DAP",
+    "Urea"
+  ],
+  "n_samples": 99,
+  "n_features": 14
+}

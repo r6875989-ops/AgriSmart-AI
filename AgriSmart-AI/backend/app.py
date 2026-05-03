@@ -62,4 +62,11 @@ if __name__ == '__main__':
     app = create_app()
     print("\n🌾 AgriSmart AI Backend running on http://localhost:5005")
     print("📊 Health check: http://localhost:5005/api/health\n")
-    app.run(host='0.0.0.0', port=5005, debug=Config.DEBUG, threaded=False, use_reloader=False)
+    port = int(os.environ.get('PORT' , 5005))
+    app.run(
+        host='0.0.0.0',
+        port=port, 
+        debug=False, 
+        threaded=True, 
+        use_reloader=False
+    )

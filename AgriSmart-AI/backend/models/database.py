@@ -212,13 +212,13 @@ def execute_query(conn, dialect, query, params=(), fetch_id=False):
     """Helper to safely execute SQL and get row ID across both dialects"""
     cursor = conn.cursor()
     
-    # Translate query if Postgres
     if dialect == 'postgres':
         query = query.replace('?', '%s')
         if fetch_id:
-            # We assume the PK is usually 'id' or 'user_id'
-            # Look for table name to guess PK
-            pk = "user_id" if "INTO users" in query.upper() else "id"
+            if "INTO users" in query.upper():
+                pk = "user_id"
+            else:
+                pk = "id"
             query += f" RETURNING {pk}"
             
     cursor.execute(query, params)
@@ -228,11 +228,17 @@ def execute_query(conn, dialect, query, params=(), fetch_id=False):
         if dialect == 'postgres':
             res = cursor.fetchone()
             if res:
-                row_id = list(res.values())[0] if type(res) == dict else res[0]
+                # Handle both dict and tuple response
+                if hasattr(res, 'keys'):
+                    row_id = res[pk]
+                elif isinstance(res, (list, tuple)):
+                    row_id = res[0]
+                else:
+                    row_id = list(res.values())[0]
         else:
             row_id = cursor.lastrowid
             
     return cursor, row_id
-
+    
 if __name__ == '__main__':
     init_db()

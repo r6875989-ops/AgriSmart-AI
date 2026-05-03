@@ -19,6 +19,8 @@ def create_app():
     
     # Ensure upload folder exists
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
+
+    init_db()
     
     # Register Blueprints
     app.register_blueprint(auth_bp)

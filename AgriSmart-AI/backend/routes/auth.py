@@ -62,8 +62,12 @@ def register():
         }), 201
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         conn.close()
-        return jsonify({'error': f'Registration failed: {str(e)}'}), 500
+        return jsonify({'error':f'Registration failed: {str(e)}'})
+
+
 
 @auth_bp.route('/api/auth/login', methods=['POST'])
 def login():

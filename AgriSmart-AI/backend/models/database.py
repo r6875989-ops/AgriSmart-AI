@@ -234,7 +234,7 @@ def execute_query(conn, dialect, query, params=(), fetch_id=False):
                 elif isinstance(res, (list, tuple)):
                     row_id = res[0]
                 else:
-                    row_id = list(res.values())[0]
+                    row_id = list(dict(res).values())[0]
         else:
             row_id = cursor.lastrowid
             

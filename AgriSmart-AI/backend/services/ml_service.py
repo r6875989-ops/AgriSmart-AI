@@ -244,3 +244,55 @@ def load_fertilizer_model():
         _fertilizer_encoders = joblib.load(encoders_path)
         print("✅ Fertilizer model loaded successfully")
     return _fertilizer_model, _fertilizer_encoders
+
+
+def predict_fertilizer_ml(crop, soil_type, stage, region, problem):
+    """Fertilizer recommendation using NVIDIA API"""
+    try:
+        prompt = f"""You are an expert Indian agricultural scientist.
+        
+Recommend fertilizer for:
+- Crop: {crop}
+- Soil Type: {soil_type}
+- Growth Stage: {stage}
+- Region: {region}
+- Problem: {problem}
+
+Return ONLY this JSON:
+{{
+    "fertilizer": "DAP + Urea",
+    "quantity": "50kg DAP + 25kg Urea per acre",
+    "advice": "Apply in two splits",
+    "hindi": {{
+        "fertilizer": "डीएपी + यूरिया",
+        "quantity": "प्रति एकड़ 50 किग्रा डीएपी + 25 किग्रा यूरिया",
+        "advice": "दो बार में डालें"
+    }}
+}}"""
+
+        response = client.chat.completions.create(
+            model="meta/llama-3.3-70b-instruct",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=500,
+            temperature=0.1
+        )
+
+        result_text = response.choices[0].message.content.strip()
+        if "```json" in result_text:
+            result_text = result_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in result_text:
+            result_text = result_text.split("```")[1].split("```")[0].strip()
+
+        return json.loads(result_text)
+
+    except Exception as e:
+        return {
+            "fertilizer": "Analysis Failed",
+            "quantity": "Unknown",
+            "advice": str(e),
+            "hindi": {
+                "fertilizer": "विश्लेषण विफल",
+                "quantity": "अज्ञात",
+                "advice": "पुनः प्रयास करें"
+            }
+        }

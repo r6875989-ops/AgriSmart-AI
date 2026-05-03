@@ -105,7 +105,11 @@ def predict_disease():
     result = predict_disease_ml(image_base64)
 
     # ── Record API usage ───────────────────────────────────────────────────────
-    record_api_call(g.user_id, 'disease')
+    try:
+      record_api_call(g.user_id, 'disease')
+    except Exception:
+      pass
+   
 
     # ── Save result to database ────────────────────────────────────────────────
     record_id = None

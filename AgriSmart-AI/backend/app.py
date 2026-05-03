@@ -10,7 +10,7 @@ from routes.price import price_bp
 from routes.voice import voice_bp
 from routes.dashboard import dashboard_bp
 
-def create_app():
+def create_app(*args, **kwargs):
     app = Flask(__name__)
     app.config.from_object(Config)
     

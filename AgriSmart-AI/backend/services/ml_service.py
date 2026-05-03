@@ -246,7 +246,7 @@ def load_fertilizer_model():
     return _fertilizer_model, _fertilizer_encoders
 
 
-def predict_fertilizer_ml(crop, soil_type, stage, region, problem):
+def predict_fertilizer_ml(crop, soil_type, stage, region, problem, temperature=None, **kwargs):
     """Fertilizer recommendation using NVIDIA API"""
     try:
         prompt = f"""You are an expert Indian agricultural scientist.

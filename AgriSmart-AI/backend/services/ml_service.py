@@ -48,7 +48,11 @@ def load_disease_model():
             return None, None
 
         os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-        import tensorflow as tf
+        try:
+            import tensorflow as tf
+        except ImportError:
+          print("Tensorflow not avilable ")
+          return None, None
 
         _tf_model        = tf.keras.models.load_model(model_path)
         _disease_classes = joblib.load(classes_path)

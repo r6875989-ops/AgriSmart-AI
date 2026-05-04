@@ -33,9 +33,8 @@ class Config:
     
     # CORS — Render pe Environment Variable set karo
     CORS_ORIGINS = os.getenv(
-        'CORS_ORIGINS',
-        'http://localhost:5173,'
-        'http://localhost:3000,'
-        'https://agri-smart-ai-six.vercel.app,'
-        'https://agri-smart-hp61ve2oc-r6875989-ops-projects.vercel.app'
-    ).split(',')
+    'CORS_ORIGINS',
+    'http://localhost:5173,'
+    'http://localhost:3000,'
+    'https://agri-smart-ai-six.vercel.app'
+).split(',')

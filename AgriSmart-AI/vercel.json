@@ -1,0 +1,6 @@
+{
+  "buildCommand": "cd AgriSmart-AI/frontend && npm install && npm run build",
+  "outputDirectory": "AgriSmart-AI/frontend/dist",
+  "installCommand": "cd AgriSmart-AI/frontend && npm install",
+  "framework": "vite"
+}

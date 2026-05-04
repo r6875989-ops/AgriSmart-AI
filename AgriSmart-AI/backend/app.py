@@ -16,12 +16,12 @@ def create_app(*args, **kwargs):
     app.config.from_object(Config)
 
     # ✅ CORS Setup
-    CORS(app,
-         origins=Config.CORS_ORIGINS,
-         supports_credentials=True,
-         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-         allow_headers=["Content-Type", "Authorization"]
-    )
+   CORS(app,
+     origins=Config.CORS_ORIGINS + ["https://agri-smart-ai-six.vercel.app"],
+     supports_credentials=True,
+     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+     allow_headers=["Content-Type", "Authorization"]
+)
 
     # ✅ Preflight OPTIONS request handler
     @app.after_request

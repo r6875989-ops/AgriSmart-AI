@@ -15,15 +15,12 @@ def create_app(*args, **kwargs):
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # ✅ CORS Setup
-   CORS(app,
-     origins=Config.CORS_ORIGINS + ["https://agri-smart-ai-six.vercel.app"],
-     supports_credentials=True,
-     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-     allow_headers=["Content-Type", "Authorization"]
-)
+    CORS(app,
+         origins=Config.CORS_ORIGINS,
+         supports_credentials=True,
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization"])
 
-    # ✅ Preflight OPTIONS request handler
     @app.after_request
     def after_request(response):
         origin = request.headers.get('Origin')
@@ -46,11 +43,9 @@ def create_app(*args, **kwargs):
                 response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization'
             return response, 200
 
-    # Ensure upload folder exists
     os.makedirs(Config.UPLOAD_FOLDER, exist_ok=True)
     init_db()
 
-    # ✅ Register Blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(disease_bp)
     app.register_blueprint(fertilizer_bp)
@@ -58,7 +53,6 @@ def create_app(*args, **kwargs):
     app.register_blueprint(voice_bp)
     app.register_blueprint(dashboard_bp)
 
-    # ✅ Health check
     @app.route('/api/health', methods=['GET'])
     def health_check():
         return jsonify({
@@ -67,7 +61,6 @@ def create_app(*args, **kwargs):
             'version': '1.0.0'
         }), 200
 
-    # ✅ Error handlers
     @app.errorhandler(404)
     def not_found(error):
         return jsonify({'error': 'Endpoint not found'}), 404

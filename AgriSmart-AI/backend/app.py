@@ -16,8 +16,8 @@ def create_app(*args, **kwargs):
     app.config.from_object(Config)
 
     CORS(app,
-         origins=Config.CORS_ORIGINS,
-         supports_credentials=True,
+         origins="*",
+         supports_credentials=False,
          methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
          allow_headers=["Content-Type", "Authorization"])
 

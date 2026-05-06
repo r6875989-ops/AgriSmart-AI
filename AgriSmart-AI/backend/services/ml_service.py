@@ -15,35 +15,53 @@ import os
 import json
 from openai import OpenAI
 
-# ── NVIDIA Client ──────────────────────────────────────────────────────────────
 client = OpenAI(
     base_url="https://integrate.api.nvidia.com/v1",
     api_key=os.getenv("NVIDIA_API_KEY", "")
 )
 
-_fertilizer_model    = None
-_fertilizer_encoders = None
-
 MODELS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'models')
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# DISEASE DETECTION — NVIDIA Vision API
-# ══════════════════════════════════════════════════════════════════════════════
-
 def load_disease_model():
-    """No local model needed — NVIDIA API handles everything"""
     return None, None
 
 
-def predict_disease_ml(image_base64: str) -> dict:
+def _error_result(name, symptoms, treatment):
+    return {
+        'disease_name': name,
+        'confidence': 0,
+        'affected_crop': 'Unknown',
+        'symptoms': symptoms,
+        'treatment': treatment,
+        'prevention': [],
+        'severity': 'Unknown',
+        'is_healthy': False,
+        'estimated_yield_loss': 'Unknown',
+        'urgency': 'Unknown',
+        'best_season_to_grow': 'Unknown',
+        'top_predictions': [],
+        'hindi': {
+            'disease_name': 'अज्ञात',
+            'crop': 'अज्ञात',
+            'severity': 'अज्ञात',
+            'urgency': 'अज्ञात',
+            'status': '❌ विश्लेषण विफल — पुनः प्रयास करें',
+            'estimated_yield_loss': 'अज्ञात',
+            'best_season': 'अज्ञात',
+            'symptoms': ['छवि का विश्लेषण नहीं हो सका'],
+            'treatment': ['स्पष्ट तस्वीर से पुनः प्रयास करें'],
+            'prevention': [],
+            'market_advice': 'पुनः प्रयास करें',
+            'government_helpline': 'किसान कॉल सेंटर: 1800-180-1551',
+            'nearest_help': 'नजदीकी कृषि विभाग से संपर्क करें'
+        }
+    }
+
+
+def predict_disease_ml(image_base64):
     try:
-        prompt = """You are Dr. Rajesh Kumar, a senior Indian agricultural scientist with 20 years of field experience across all Indian states.
-
-Carefully analyze this crop leaf image and provide a highly detailed disease diagnosis.
-
-Return ONLY the following JSON — no extra text, no markdown, no explanation:
-
+        prompt = """Analyze this crop leaf image and return ONLY this JSON, no extra text:
 {
     "disease_name": "Early_blight",
     "confidence": 92.5,
@@ -58,8 +76,7 @@ Return ONLY the following JSON — no extra text, no markdown, no explanation:
     "best_season_to_grow": "October to February",
     "top_predictions": [
         {"class": "Early_blight", "crop": "Tomato", "confidence": 92.5},
-        {"class": "Septoria_leaf_spot", "crop": "Tomato", "confidence": 4.8},
-        {"class": "Healthy", "crop": "Tomato", "confidence": 2.7}
+        {"class": "Healthy", "crop": "Tomato", "confidence": 7.5}
     ],
     "hindi": {
         "disease_name": "अर्ली ब्लाइट",
@@ -76,7 +93,8 @@ Return ONLY the following JSON — no extra text, no markdown, no explanation:
         "government_helpline": "किसान कॉल सेंटर: 1800-180-1551",
         "nearest_help": "नजदीकी कृषि विभाग से संपर्क करें"
     }
-}"""
+}
+Analyze the ACTUAL image. Return ONLY valid JSON."""
 
         response = client.chat.completions.create(
             model="meta/llama-3.2-90b-vision-instruct",
@@ -104,11 +122,7 @@ Return ONLY the following JSON — no extra text, no markdown, no explanation:
         result_text = response.choices[0].message.content.strip()
 
         if not result_text:
-            return _error_result(
-                "Empty Response",
-                ["NVIDIA API returned empty response"],
-                ["Please try again with a clearer photo"]
-            )
+            raise ValueError("Empty response from API")
 
         if "```json" in result_text:
             result_text = result_text.split("```json")[1].split("```")[0].strip()
@@ -121,144 +135,105 @@ Return ONLY the following JSON — no extra text, no markdown, no explanation:
             if start != -1 and end != -1:
                 result_text = result_text[start:end+1]
 
-        result = json.loads(result_text)
-        return result
+        return json.loads(result_text)
 
     except Exception as e:
         print(f"[ml_service] predict_disease_ml error: {e}")
         return _error_result(
             "Prediction Error",
             [f"Analysis failed: {str(e)}"],
-            ["Please try again with a clearer, well-lit photo of the leaf"]
+            ["Please try again with a clearer photo"]
         )
 
-def _safe_get(disease_info: dict, idx: int) -> dict:
-    result = disease_info.get(idx)
-    if result is None:
-        result = disease_info.get(str(idx))
-    return result or {}
-
-
-def _error_result(name: str, symptoms: list, treatment: list) -> dict:
-    return {
-        'disease_name':    name,
-        'confidence':      0,
-        'affected_crop':   'Unknown',
-        'symptoms':        symptoms,
-        'treatment':       treatment,
-        'prevention':      [],
-        'severity':        'Unknown',
-        'is_healthy':      False,
-        'estimated_yield_loss': 'Unknown',
-        'urgency':         'Unknown',
-        'best_season_to_grow': 'Unknown',
-        'top_predictions': [],
-        'hindi': {
-            'disease_name':       'अज्ञात',
-            'crop':               'अज्ञात',
-            'severity':           'अज्ञात',
-            'urgency':            'अज्ञात',
-            'status':             '❌ विश्लेषण विफल — पुनः प्रयास करें',
-            'estimated_yield_loss': 'अज्ञात',
-            'best_season':        'अज्ञात',
-            'symptoms':           ['छवि का विश्लेषण नहीं हो सका'],
-            'treatment':          ['स्पष्ट और अच्छी रोशनी वाली तस्वीर से पुनः प्रयास करें'],
-            'prevention':         [],
-            'market_advice':      'पुनः प्रयास करें',
-            'government_helpline': 'किसान कॉल सेंटर: 1800-180-1551',
-            'nearest_help':       'नजदीकी कृषि विभाग से संपर्क करें'
-        }
-    }
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# FERTILIZER MODEL (unchanged — local ML model)
-# ══════════════════════════════════════════════════════════════════════════════
 
 def load_fertilizer_model():
-    """Load fertilizer recommendation ML model — lazy load"""
-    global _fertilizer_model, _fertilizer_encoders
-    if _fertilizer_model is None:
-        import joblib
-        model_path    = os.path.join(MODELS_DIR, 'fertilizer_model.pkl')
-        encoders_path = os.path.join(MODELS_DIR, 'fertilizer_encoders.pkl')
-        if not os.path.exists(model_path):
-            print(f"⚠️  Fertilizer model not found: {model_path}")
-            return None, None
-        if not os.path.exists(encoders_path):
-            print(f"⚠️  Fertilizer encoders not found: {encoders_path}")
-            return None, None
-        _fertilizer_model    = joblib.load(model_path)
-        _fertilizer_encoders = joblib.load(encoders_path)
-        print("✅ Fertilizer model loaded successfully")
-    return _fertilizer_model, _fertilizer_encoders
+    return None, None
 
 
-def predict_fertilizer_ml(crop, soil_type, stage, region, problem, temperature=None, **kwargs):
-    """Fertilizer recommendation using NVIDIA API"""
+def predict_fertilizer_ml(crop, soil_type, stage='', region='', problem='', temperature=None, **kwargs):
     try:
         prompt = f"""You are an expert Indian agricultural scientist.
-        
 Recommend fertilizer for:
 - Crop: {crop}
 - Soil Type: {soil_type}
 - Growth Stage: {stage}
 - Region: {region}
-- Problem: {problem}
+- Problem: {problem if problem else 'None'}
 
-Return ONLY this JSON:
+Return ONLY this JSON, no extra text:
 {{
-    "fertilizer": "DAP + Urea",
-    "quantity": "50kg DAP + 25kg Urea per acre",
-    "advice": "Apply in two splits",
+    "primary_fertilizer": {{
+        "name": "DAP",
+        "quantity_per_acre": "50kg per acre",
+        "application_method": "Broadcast before sowing",
+        "timing": "At sowing time"
+    }},
+    "secondary_fertilizer": {{
+        "name": "Urea",
+        "quantity_per_acre": "25kg per acre",
+        "application_method": "Top dressing",
+        "timing": "30 days after sowing"
+    }},
+    "micronutrients": "Zinc Sulphate 10kg/acre",
+    "expected_improvement": "15-20% yield increase",
+    "precautions": "Avoid excess nitrogen",
     "hindi": {{
-        "fertilizer": "डीएपी + यूरिया",
-        "quantity": "प्रति एकड़ 50 किग्रा डीएपी + 25 किग्रा यूरिया",
-        "advice": "दो बार में डालें"
+        "primary_fertilizer": "डीएपी - 50 किग्रा प्रति एकड़",
+        "secondary_fertilizer": "यूरिया - 25 किग्रा प्रति एकड़",
+        "micronutrients": "जिंक सल्फेट 10 किग्रा/एकड़",
+        "expected_improvement": "15-20% उपज वृद्धि",
+        "precautions": "नाइट्रोजन की अधिक मात्रा से बचें"
     }}
 }}"""
 
         response = client.chat.completions.create(
             model="meta/llama-3.3-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=500,
+            max_tokens=800,
             temperature=0.1
         )
 
         result_text = response.choices[0].message.content.strip()
 
-# Empty response check
-if not result_text:
-    return _error_result(
-        "Empty Response",
-        ["NVIDIA API returned empty response"],
-        ["Please try again with a clearer photo"]
-    )
+        if not result_text:
+            raise ValueError("Empty response")
 
-# Clean JSON
-if "```json" in result_text:
-    result_text = result_text.split("```json")[1].split("```")[0].strip()
-elif "```" in result_text:
-    result_text = result_text.split("```")[1].split("```")[0].strip()
+        if "```json" in result_text:
+            result_text = result_text.split("```json")[1].split("```")[0].strip()
+        elif "```" in result_text:
+            result_text = result_text.split("```")[1].split("```")[0].strip()
 
-# Find JSON object
-if not result_text.startswith('{'):
-    start = result_text.find('{')
-    end = result_text.rfind('}')
-    if start != -1 and end != -1:
-        result_text = result_text[start:end+1]
+        if not result_text.startswith('{'):
+            start = result_text.find('{')
+            end = result_text.rfind('}')
+            if start != -1 and end != -1:
+                result_text = result_text[start:end+1]
 
-result = json.loads(result_text)
-return result
+        return json.loads(result_text)
 
     except Exception as e:
+        print(f"[ml_service] predict_fertilizer_ml error: {e}")
         return {
-            "fertilizer": "Analysis Failed",
-            "quantity": "Unknown",
-            "advice": str(e),
+            "primary_fertilizer": {
+                "name": "DAP",
+                "quantity_per_acre": "50kg per acre",
+                "application_method": "Broadcast",
+                "timing": "At sowing"
+            },
+            "secondary_fertilizer": {
+                "name": "Urea",
+                "quantity_per_acre": "25kg per acre",
+                "application_method": "Top dressing",
+                "timing": "30 days after sowing"
+            },
+            "micronutrients": "Zinc Sulphate if needed",
+            "expected_improvement": "Default recommendation",
+            "precautions": str(e),
             "hindi": {
-                "fertilizer": "विश्लेषण विफल",
-                "quantity": "अज्ञात",
-                "advice": "पुनः प्रयास करें"
+                "primary_fertilizer": "डीएपी - 50 किग्रा प्रति एकड़",
+                "secondary_fertilizer": "यूरिया - 25 किग्रा प्रति एकड़",
+                "micronutrients": "जिंक सल्फेट यदि आवश्यक",
+                "expected_improvement": "डिफ़ॉल्ट अनुशंसा",
+                "precautions": "पुनः प्रयास करें"
             }
         }

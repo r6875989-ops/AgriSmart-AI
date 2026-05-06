@@ -131,7 +131,7 @@ def execute_query(conn, dialect, query, params=(), fetch_id=False):
         query = query.replace('?', '%s')
         if fetch_id:
             # users table mein primary key 'user_id' hai, baaki mein 'id'
-            if "INTO users" in query.upper():
+            if "INTO USERS" in query.upper():
                 query += " RETURNING user_id"
                 pk = "user_id"
             else:

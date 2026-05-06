@@ -1,7 +1,7 @@
 {
   "buildCommand": "cd AgriSmart-AI/frontend && npm install && npm run build",
   "outputDirectory": "AgriSmart-AI/frontend/dist",
-  "installCommand": "echo 'skip'",
+  "installCommand": "echo skip",
   "framework": "vite",
   "rewrites": [
     {

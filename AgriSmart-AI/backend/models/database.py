@@ -130,7 +130,7 @@ def execute_query(conn, dialect, query, params=(), fetch_id=False):
     if dialect == 'postgres':
         query = query.replace('?', '%s')
         if fetch_id:
-            # ✅ KEY FIX: users table has user_id, all others have id
+            # users table mein primary key 'user_id' hai, baaki mein 'id'
             if "INTO users" in query.upper():
                 query += " RETURNING user_id"
                 pk = "user_id"
@@ -145,8 +145,13 @@ def execute_query(conn, dialect, query, params=(), fetch_id=False):
         if dialect == 'postgres':
             res = cursor.fetchone()
             if res:
-                # ✅ RealDictRow fix — direct key access
-                row_id = res[pk]
+                if isinstance(res, dict):
+                    row_id = res.get(pk)
+                else:
+                    try:
+                        row_id = res[pk]
+                    except (KeyError, IndexError):
+                        row_id = res[0]
         else:
             row_id = cursor.lastrowid
 

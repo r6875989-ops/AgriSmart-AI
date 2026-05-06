@@ -50,15 +50,18 @@ def get_recommendation():
     
     # Use ML model for prediction
     result = predict_fertilizer_ml(
-        crop=crop,
-        soil_type=soil_type,
-        temperature=defaults['temp'],
-        humidity=defaults['humidity'],
-        moisture=defaults['moisture'],
-        nitrogen=defaults['n'],
-        phosphorous=defaults['p'],
-        potassium=defaults['k']
-    )
+    crop=crop,
+    soil_type=soil_type,
+    stage=stage,
+    region=region,
+    problem=problem,
+    temperature=defaults['temp'],
+    humidity=defaults['humidity'],
+    moisture=defaults['moisture'],
+    nitrogen=defaults['n'],
+    phosphorous=defaults['p'],
+    potassium=defaults['k']
+)
     
     record_api_call(g.user_id, 'fertilizer')
     

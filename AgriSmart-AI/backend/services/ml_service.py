@@ -278,12 +278,30 @@ Return ONLY this JSON:
         )
 
         result_text = response.choices[0].message.content.strip()
-        if "```json" in result_text:
-            result_text = result_text.split("```json")[1].split("```")[0].strip()
-        elif "```" in result_text:
-            result_text = result_text.split("```")[1].split("```")[0].strip()
 
-        return json.loads(result_text)
+# Empty response check
+if not result_text:
+    return _error_result(
+        "Empty Response",
+        ["NVIDIA API returned empty response"],
+        ["Please try again with a clearer photo"]
+    )
+
+# Clean JSON
+if "```json" in result_text:
+    result_text = result_text.split("```json")[1].split("```")[0].strip()
+elif "```" in result_text:
+    result_text = result_text.split("```")[1].split("```")[0].strip()
+
+# Find JSON object
+if not result_text.startswith('{'):
+    start = result_text.find('{')
+    end = result_text.rfind('}')
+    if start != -1 and end != -1:
+        result_text = result_text[start:end+1]
+
+result = json.loads(result_text)
+return result
 
     except Exception as e:
         return {
